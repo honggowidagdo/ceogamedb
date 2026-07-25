@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Simulasi CEO — Kopi Nusantara Export</title>
+<style>
+  :root{
+    --bg: #1c1712;
+    --bg2: #241c15;
+    --card: #2a2118;
+    --cream: #f2e8d5;
+    --gold: #c99a4a;
+    --gold-bright: #e0b45f;
+    --green: #7a9b6e;
+    --rust: #b1552f;
+    --line: #4a3d2c;
+    --muted: #a3937a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--cream);
+    font-family: Georgia, 'Iowan Old Style', serif;
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(201,154,74,0.08), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(122,155,110,0.07), transparent 45%);
+  }
+  .wrap{max-width:720px; margin:0 auto; padding:36px 20px 80px;}
+
+  .stamp{
+    display:inline-block; border:2px solid var(--gold); color:var(--gold-bright);
+    padding:4px 12px; font-family:'Courier New', monospace; font-size:11px;
+    letter-spacing:3px; text-transform:uppercase; transform:rotate(-2deg);
+    border-radius:2px;
+  }
+  header{margin-bottom:28px;}
+  h1{
+    font-size:2.1em; margin:14px 0 6px; color:var(--cream); font-weight:700;
+    letter-spacing:0.5px; line-height:1.15;
+  }
+  .subtitle{color:var(--muted); font-style:italic; font-size:1.02em; line-height:1.5;}
+
+  .intro-card{
+    background:var(--card); border:1px solid var(--line); border-radius:6px;
+    padding:24px 26px; margin:22px 0; line-height:1.75; font-size:1.03em;
+    position:relative;
+  }
+  .intro-card::before{
+    content:"☕"; position:absolute; top:-16px; left:22px; background:var(--bg2);
+    padding:2px 10px; font-size:1.3em; border:1px solid var(--line); border-radius:20px;
+  }
+
+  .progress-row{display:flex; align-items:center; gap:10px; margin:26px 0 18px;}
+  .progress-track{flex:1; height:6px; background:var(--line); border-radius:4px; overflow:hidden;}
+  .progress-fill{height:100%; background:linear-gradient(90deg, var(--gold), var(--green)); width:0%; transition:width .4s ease;}
+  .progress-label{font-family:'Courier New', monospace; font-size:12px; color:var(--muted); white-space:nowrap;}
+
+  .quarter-tag{
+    font-family:'Courier New', monospace; font-size:11px; color:var(--rust);
+    letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; display:block;
+  }
+  .question-title{font-size:1.35em; line-height:1.4; margin:0 0 18px; color:var(--cream);}
+
+  .option{
+    display:block; width:100%; text-align:left; background:var(--card);
+    border:1px solid var(--line); color:var(--cream); padding:16px 18px;
+    margin-bottom:12px; border-radius:6px; font-family:inherit; font-size:0.98em;
+    line-height:1.5; cursor:pointer; transition:border-color .2s, transform .15s, background .2s;
+  }
+  .option:hover{border-color:var(--gold); background:#31271a; transform:translateX(3px);}
+  .option:focus-visible{outline:2px solid var(--gold-bright); outline-offset:2px;}
+  .option .opt-letter{
+    display:inline-block; width:22px; height:22px; line-height:22px; text-align:center;
+    border:1px solid var(--gold); border-radius:50%; font-size:12px; color:var(--gold-bright);
+    margin-right:10px; font-family:'Courier New', monospace;
+  }
+
+  button.nav-btn{
+    background:var(--gold); color:#1c1712; border:none; padding:12px 26px;
+    border-radius:5px; font-size:0.95em; font-weight:700; cursor:pointer;
+    font-family: Georgia, serif; letter-spacing:0.3px;
+  }
+  button.nav-btn:hover{background:var(--gold-bright);}
+  .center{text-align:center;}
+
+  .result-hero{text-align:center; padding:20px 0 10px;}
+  .result-title{font-size:1.9em; color:var(--gold-bright); margin:10px 0 6px;}
+  .result-desc{color:var(--cream); line-height:1.7; max-width:560px; margin:0 auto 20px; font-size:1.02em;}
+
+  .scorebars{margin:26px 0;}
+  .score-row{margin-bottom:16px;}
+  .score-label{display:flex; justify-content:space-between; font-size:0.9em; color:var(--muted); margin-bottom:5px; font-family:'Courier New', monospace;}
+  .score-track{height:10px; background:var(--line); border-radius:5px; overflow:hidden;}
+  .score-fill{height:100%; border-radius:5px; transition:width .8s ease;}
+
+  .fade-in{animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);}}
+
+  .restart-row{text-align:center; margin-top:30px;}
+  .restart-row button{background:transparent; border:1px solid var(--muted); color:var(--muted); padding:10px 20px; border-radius:5px; cursor:pointer; font-family:inherit;}
+  .restart-row button:hover{border-color:var(--cream); color:var(--cream);}
+
+  footer.tag{margin-top:40px; text-align:center; color:var(--line); font-size:11px; font-family:'Courier New',monospace; letter-spacing:1px;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+const app = document.getElementById('app');
+
+const questions = [
+  {
+    quarter: "Tahun 1 — Awal Mula",
+    text: "Setahun setelah lulus dari Digital Business BINUS Semarang, kamu mendirikan “Kalyana Coffee” — mengangkat kopi petani Temanggung dan Kalisat lewat storytelling digital. Modal awal terbatas. Ke mana kamu fokuskan uang pertama?",
+    options: [
+      {label:"Bangun website & konten digital yang kuat dulu, biar cerita petani sampai ke pembeli luar negeri", score:{inovasi:2, finansial:0, kepemimpinan:1, etika:1}},
+      {label:"Investasi mesin roasting kecil supaya kualitas produk konsisten sejak awal", score:{inovasi:0, finansial:1, kepemimpinan:1, etika:2}},
+      {label:"Simpan sebagian besar sebagai dana darurat, jalan pelan-pelan dengan supplier yang sudah roasting", score:{inovasi:0, finansial:2, kepemimpinan:0, etika:1}},
+    ]
+  },
+  {
+    quarter: "Tahun 1 — Kemitraan Petani",
+    text: "Kelompok tani di Temanggung menawarkan kontrak eksklusif, tapi harga yang mereka minta 20% di atas pasar karena metode petik merah manual mereka. Tim finance-mu ragu.",
+    options: [
+      {label:"Terima harga itu — kualitas dan cerita fair-trade ini yang akan membedakan Kalyana di pasar ekspor", score:{etika:2, finansial:0, inovasi:1, kepemimpinan:1}},
+      {label:"Negosiasi kontrak jangka panjang 3 tahun dengan harga bertahap, biar dua-duanya aman", score:{kepemimpinan:2, etika:1, finansial:1, inovasi:0}},
+      {label:"Cari kelompok tani lain yang harganya lebih kompetitif dulu, evaluasi lagi tahun depan", score:{finansial:2, etika:0, kepemimpinan:0, inovasi:0}},
+    ]
+  },
+  {
+    quarter: "Tahun 2 — Pintu Ekspor Pertama",
+    text: "Sebuah roastery butik di Melbourne tertarik, tapi mereka minta sertifikasi organik yang butuh proses & biaya audit 6 bulan. Sementara itu ada juga trading company besar yang mau beli langsung tanpa sertifikasi, volume besar, margin tipis.",
+    options: [
+      {label:"Kejar sertifikasi organik dulu — ini investasi jangka panjang untuk reputasi merek", score:{inovasi:1, finansial:0, kepemimpinan:1, etika:2}},
+      {label:"Ambil kontrak trading company untuk cash flow, sambil proses sertifikasi berjalan paralel", score:{finansial:2, kepemimpinan:2, inovasi:0, etika:0}},
+      {label:"Tolak keduanya, fokus dulu perkuat kualitas roasting sebelum berani ekspor", score:{etika:1, finansial:0, kepemimpinan:0, inovasi:1}},
+    ]
+  },
+  {
+    quarter: "Tahun 2 — Krisis Kualitas",
+    text: "Satu kontainer ekspor ke Jerman ditolak karena kadar kelembapan biji di atas standar akibat musim hujan panjang. Kerugian signifikan, dan reputasi Kalyana dipertaruhkan.",
+    options: [
+      {label:"Ganti seluruh kontainer dengan biaya sendiri, minta maaf terbuka, dan investasi mesin dryer baru", score:{etika:2, finansial:0, kepemimpinan:2, inovasi:0}},
+      {label:"Negosiasi diskon dengan buyer untuk sebagian kompensasi, sambil evaluasi proses gudang", score:{finansial:2, kepemimpinan:1, etika:0, inovasi:0}},
+      {label:"Cari supplier logistik baru yang punya sistem kontrol kelembapan lebih baik", score:{inovasi:2, finansial:0, kepemimpinan:0, etika:1}},
+    ]
+  },
+  {
+    quarter: "Tahun 3 — Tawaran Investor",
+    text: "VC dari Singapura menawarkan pendanaan Seri A besar, tapi minta 35% saham dan kursi di dewan direksi dengan target pertumbuhan agresif tahun depan.",
+    options: [
+      {label:"Terima — ekspansi cepat lebih penting daripada mempertahankan kendali penuh", score:{finansial:2, inovasi:2, kepemimpinan:0, etika:0}},
+      {label:"Negosiasi ulang: turunkan saham jadi 20%, minta klausul yang melindungi hubungan dengan petani", score:{kepemimpinan:2, etika:2, finansial:0, inovasi:0}},
+      {label:"Tolak, cari pendanaan dari bank atau lembaga koperasi agar tetap independen", score:{etika:1, finansial:1, kepemimpinan:1, inovasi:0}},
+    ]
+  },
+  {
+    quarter: "Tahun 3 — Disrupsi Pasar",
+    text: "Kompetitor mulai pakai AI untuk cupping score otomatis dan rantai pasok berbasis blockchain untuk transparansi asal biji. Tim engineering-mu kecil.",
+    options: [
+      {label:"Investasi besar bangun sistem serupa sekarang — jangan sampai tertinggal narasi teknologi", score:{inovasi:2, finansial:0, kepemimpinan:0, etika:0}},
+      {label:"Mulai kecil: pilot QR code traceability untuk tiap batch, sambil belajar dari hasilnya", score:{inovasi:2, finansial:1, kepemimpinan:1, etika:1}},
+      {label:"Tunggu teknologi ini matang dan lebih murah, fokus dulu perkuat kualitas & relasi buyer", score:{finansial:1, kepemimpinan:0, etika:1, inovasi:0}},
+    ]
+  },
+  {
+    quarter: "Tahun 4 — Konflik Internal",
+    text: "Head of Export dan Head of Sourcing berselisih tajam soal strategi: satu ingin kejar volume ekspor besar-besaran, satu lagi ingin jaga eksklusivitas dan harga premium. Tim mulai terbelah.",
+    options: [
+      {label:"Fasilitasi diskusi terbuka, gabungkan dua visi jadi roadmap dua lini produk: premium dan reguler", score:{kepemimpinan:2, inovasi:1, etika:1, finansial:0}},
+      {label:"Ambil keputusan tegas sendiri sebagai CEO demi kecepatan, jelaskan alasannya ke tim", score:{kepemimpinan:2, finansial:1, etika:0, inovasi:0}},
+      {label:"Minta konsultan eksternal untuk audit strategi dan beri rekomendasi objektif", score:{kepemimpinan:0, finansial:0, inovasi:1, etika:1}},
+    ]
+  },
+  {
+    quarter: "Tahun 5 — Panggung Dunia",
+    text: "Kalyana Coffee diundang tampil di World of Coffee Expo di Eropa — puncak validasi merek. Tapi biayanya besar, dan bertepatan dengan musim panen kritis yang butuh perhatian penuh di kebun.",
+    options: [
+      {label:"Hadir all-in — ini momentum branding global yang tidak datang dua kali", score:{inovasi:2, finansial:0, kepemimpinan:1, etika:0}},
+      {label:"Kirim tim kecil yang solid ke expo, CEO tetap di lapangan mengawal panen bersama petani", score:{kepemimpinan:2, etika:2, finansial:1, inovasi:0}},
+      {label:"Lewati tahun ini, alokasikan dana ke perbaikan infrastruktur pasca-panen", score:{finansial:2, etika:1, kepemimpinan:0, inovasi:0}},
+    ]
+  }
+];
+
+const profiles = {
+  finansial: {name:"CEO Konservatif", desc:"Kamu membawa Kalyana Coffee tumbuh dengan hati-hati dan terukur. Setiap keputusan finansial dipertimbangkan matang — cash flow sehat, risiko terkendali. Kalyana mungkin tidak tumbuh secepat kompetitor, tapi fondasinya kokoh dan tahan banting menghadapi guncangan pasar global.", color:"var(--gold)"},
+  inovasi: {name:"CEO Visioner", desc:"Kamu memimpin Kalyana Coffee dengan berani mengejar teknologi dan tren baru — dari storytelling digital hingga traceability berbasis data. Merek ini dikenal sebagai yang paling maju secara inovasi di antara eksportir kopi spesialti Indonesia, meski kadang harus membayar mahal untuk jadi yang pertama.", color:"var(--green)"},
+  kepemimpinan: {name:"CEO Pemersatu", desc:"Kekuatan terbesarmu ada di manusia. Kamu menjaga tim, mitra, dan petani tetap bergerak searah meski di tengah konflik dan tekanan pasar. Kalyana Coffee tumbuh sebagai organisasi yang solid, dipercaya karyawan maupun buyer internasional — reputasi kepemimpinanmu jadi aset tak ternilai.", color:"var(--gold-bright)"},
+  etika: {name:"CEO Berintegritas", desc:"Kamu selalu memilih jalan yang adil bagi petani dan jujur pada buyer, bahkan saat itu mahal secara finansial. Kalyana Coffee dikenal dunia bukan cuma karena rasa, tapi karena kisah keadilan di baliknya — merek yang dipercaya justru karena prinsip yang tidak pernah kamu tawar.", color:"var(--rust)"}
+};
+
+let step = -1; // -1 = intro
+let scores = {finansial:0, inovasi:0, kepemimpinan:0, etika:0};
+let answers = [];
+
+function render(){
+  app.innerHTML = "";
+  if(step === -1) renderIntro();
+  else if(step < questions.length) renderQuestion(step);
+  else renderResult();
+}
+
+function renderIntro(){
+  const el = document.createElement('div');
+  el.className = 'fade-in';
+  el.innerHTML = `
+    <header>
+      <span class="stamp">Simulasi Eksekutif</span>
+      <h1>Kalyana Coffee<br>Dari Semarang ke Dunia</h1>
+      <div class="subtitle">Sebuah simulasi keputusan CEO — 5 tahun, 8 persimpangan jalan</div>
+    </header>
+    <div class="intro-card">
+      Kamu baru saja lulus dari <strong>Digital Business, BINUS Semarang</strong>. Alih-alih melamar kerja korporat,
+      kamu memilih jalan yang lebih tak pasti: mendirikan <strong>Kalyana Coffee</strong>, usaha rintisan yang
+      mengangkat biji kopi dari petani Temanggung dan Kalisat, lalu mengemasnya dengan cerita digital
+      yang jujur dan menarik — dengan satu mimpi besar, membawanya menembus pasar ekspor dunia.<br><br>
+      Lima tahun ke depan akan menguji setiap keputusanmu sebagai CEO. Delapan momen krusial menanti —
+      dari modal pertama hingga panggung expo Eropa. Setiap pilihan membentuk gaya kepemimpinanmu,
+      dan pada akhirnya, menentukan jenis CEO seperti apa dirimu.
+    </div>
+    <div class="center">
+      <button class="nav-btn" id="startBtn">Mulai Memimpin →</button>
+    </div>
+    <footer class="tag">KALYANA COFFEE • EST. TEMANGGUNG • EXPORT DIVISION</footer>
+  `;
+  app.appendChild(el);
+  document.getElementById('startBtn').onclick = () => { step = 0; render(); };
+}
+
+function renderQuestion(i){
+  const q = questions[i];
+  const el = document.createElement('div');
+  el.className = 'fade-in';
+  const pct = Math.round((i/questions.length)*100);
+  const letters = ['A','B','C'];
+  el.innerHTML = `
+    <div class="progress-row">
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-label">${i+1} / ${questions.length}</div>
+    </div>
+    <span class="quarter-tag">${q.quarter}</span>
+    <h2 class="question-title">${q.text}</h2>
+    <div id="opts"></div>
+  `;
+  app.appendChild(el);
+  const optsDiv = el.querySelector('#opts');
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.innerHTML = `<span class="opt-letter">${letters[idx]}</span>${opt.label}`;
+    btn.onclick = () => {
+      for(const k in opt.score){ scores[k] += opt.score[k]; }
+      answers.push({q: q.text, chosen: opt.label});
+      step++;
+      render();
+    };
+    optsDiv.appendChild(btn);
+  });
+}
+
+function renderResult(){
+  const topKey = Object.keys(scores).reduce((a,b) => scores[a] >= scores[b] ? a : b);
+  const profile = profiles[topKey];
+  const maxPossible = 16; // rough scaling per dimension across 8 qs
+  const el = document.createElement('div');
+  el.className = 'fade-in';
+  el.innerHTML = `
+    <div class="result-hero">
+      <span class="stamp">Hasil Akhir Simulasi</span>
+      <div class="result-title">${profile.name}</div>
+      <p class="result-desc">${profile.desc}</p>
+    </div>
+    <div class="scorebars" id="bars"></div>
+    <div class="restart-row"><button id="restartBtn">Ulangi Simulasi</button></div>
+    <footer class="tag">KALYANA COFFEE • 5 TAHUN PERJALANAN • ${new Date().getFullYear()}</footer>
+  `;
+  app.appendChild(el);
+  const bars = el.querySelector('#bars');
+  const labels = {finansial:"Finansial", inovasi:"Inovasi", kepemimpinan:"Kepemimpinan", etika:"Etika"};
+  const colors = {finansial:"var(--gold)", inovasi:"var(--green)", kepemimpinan:"var(--gold-bright)", etika:"var(--rust)"};
+  for(const k in scores){
+    const pct = Math.min(100, Math.round((scores[k]/maxPossible)*100));
+    const row = document.createElement('div');
+    row.className = 'score-row';
+    row.innerHTML = `
+      <div class="score-label"><span>${labels[k]}</span><span>${scores[k]} poin</span></div>
+      <div class="score-track"><div class="score-fill" style="width:0%; background:${colors[k]}"></div></div>
+    `;
+    bars.appendChild(row);
+    setTimeout(() => { row.querySelector('.score-fill').style.width = pct + '%'; }, 100);
+  }
+  document.getElementById('restartBtn').onclick = () => {
+    step = -1; scores = {finansial:0, inovasi:0, kepemimpinan:0, etika:0}; answers = [];
+    render();
+  };
+}
+
+render();
+</script>
+</body>
+</html>
